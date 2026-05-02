@@ -1,6 +1,5 @@
 "use client";
 
-import { useLanguage } from "@/lib/language-context";
 import { HeroSection } from "@/components/home/hero-section";
 import { StatsSection } from "@/components/home/stats-section";
 import { ClientsSlider } from "@/components/home/clients-slider";

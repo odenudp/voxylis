@@ -5,6 +5,9 @@ import { useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import { PageHero } from "@/components/ui/page-hero";
 
+// Note: For SEO, this page should have server-side metadata
+// Add a separate metadata export in a layout.tsx or use generateMetadata
+
 export default function HostingPage() {
   const { t, currency, isRTL, billing, setBilling } = useLanguage();
 
