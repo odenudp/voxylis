@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Block sensitive paths
+Disallow: /css/
+Disallow: /js/
+Disallow: /img/
+
+# Allow CSS/JS for Google rendering
+User-agent: Googlebot
+Allow: /css/
+Allow: /js/
+Allow: /img/
+
+# Sitemap
+Sitemap: https://voxylis.com/sitemap.xml

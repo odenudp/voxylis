@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Voxylis — You're Offline</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#060816;color:#E8E2D2;font-family:'Ubuntu',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem}
+.wrap{max-width:440px}
+.logo{margin-bottom:2rem}
+.logo svg{width:160px;height:auto}
+h1{font-size:1.8rem;font-weight:700;letter-spacing:-.03em;margin-bottom:.75rem;color:#E8E2D2}
+h1 em{font-style:normal;color:#13E9BA}
+p{font-size:.92rem;color:rgba(232,226,210,.55);line-height:1.72;margin-bottom:1.8rem}
+.btn{display:inline-flex;align-items:center;gap:.5rem;background:#13E9BA;color:#060816;font-weight:700;font-size:.86rem;letter-spacing:.06em;padding:.85rem 2rem;border-radius:5px;text-decoration:none;transition:background .2s}
+.btn:hover{background:#0fd4a8}
+.signal{display:flex;justify-content:center;gap:4px;margin-bottom:2rem}
+.bar{width:6px;border-radius:3px;background:#13E9BA;opacity:.2;animation:bOff 1.8s ease-in-out infinite}
+.bar:nth-child(1){height:12px;animation-delay:0s}
+.bar:nth-child(2){height:20px;animation-delay:.2s}
+.bar:nth-child(3){height:28px;animation-delay:.4s}
+.bar:nth-child(4){height:20px;animation-delay:.2s;opacity:.08}
+.bar:nth-child(5){height:12px;opacity:.04}
+@keyframes bOff{0%,100%{opacity:.08}50%{opacity:.35}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="signal">
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  </div>
+  <div class="logo">
+    <svg viewBox="0 0 320 90" xmlns="http://www.w3.org/2000/svg">
+      <line x1="28" y1="18" x2="50" y2="66" stroke="#E8E2D2" stroke-width="10" stroke-linecap="round"/>
+      <line x1="72" y1="18" x2="50" y2="66" stroke="#13E9BA" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="50" cy="66" r="3.5" fill="#13E9BA"/>
+      <line x1="82" y1="46" x2="82" y2="40" stroke="#13E9BA" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="90" y1="46" x2="90" y2="34" stroke="#13E9BA" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="98" y1="46" x2="98" y2="26" stroke="#13E9BA" stroke-width="3.5" stroke-linecap="round"/>
+      <text x="112" y="60" font-family="Ubuntu,sans-serif" font-weight="700" font-size="36" letter-spacing="-0.5"><tspan fill="#13E9BA">V</tspan><tspan fill="#E8E2D2">oxylis</tspan></text>
+    </svg>
+  </div>
+  <h1>You're <em>Offline</em></h1>
+  <p>It looks like you've lost your internet connection. Please check your network and try again — we'll be right here when you're back.</p>
+  <a href="/" class="btn" onclick="location.reload()">↺ &nbsp;Try Again</a>
+</div>
+</body>
+</html>

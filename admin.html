@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Voxylis Admin</title>
+<meta name="robots" content="noindex, nofollow"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Cairo:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060816;--bg2:#0d1228;--bg3:#141933;--navy:#1a1d30;
+  --signal:#13E9BA;--sigdim:#0bb898;--parchment:#E8E2D2;
+  --spark:#FF6340;--purple:#7C3AED;--amber:#F59E0B;--red:#EF4444;--green:#22C55E;
+  --muted:rgba(232,226,210,.42);--border:rgba(19,233,186,.13);
+  --sidebar:220px;--topbar:58px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--parchment);font-family:'Ubuntu',sans-serif;font-size:14px}
+
+/* ── LOGIN ── */
+#loginScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:1.5rem;
+}
+.login-box{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:16px;padding:2.8rem 2.5rem;
+  width:100%;max-width:400px;text-align:center;
+}
+.login-logo svg{width:140px;height:auto;margin:0 auto 1.6rem;display:block}
+.login-box h2{font-size:1.3rem;font-weight:700;margin-bottom:.35rem}
+.login-box p{font-size:.82rem;color:var(--muted);margin-bottom:1.8rem}
+.l-field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:1rem;text-align:left}
+.l-field label{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.l-field input{background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--parchment);font-size:.88rem;padding:.72rem 1rem;outline:none;transition:border-color .2s;font-family:inherit}
+.l-field input:focus{border-color:var(--signal)}
+.l-err{font-size:.78rem;color:var(--spark);min-height:1.1rem;margin-bottom:.5rem;text-align:left}
+.btn-login{width:100%;background:var(--signal);color:var(--bg);font-weight:700;font-size:.88rem;letter-spacing:.06em;padding:.85rem;border-radius:7px;border:none;cursor:pointer;transition:background .2s;font-family:inherit}
+.btn-login:hover{background:var(--sigdim)}
+.login-hint{font-size:.72rem;color:var(--muted);margin-top:1rem}
+.login-hint span{color:var(--signal)}
+
+/* ── LAYOUT ── */
+#adminApp{display:none;height:100%;flex-direction:column}
+#adminApp.show{display:flex}
+
+/* Top bar */
+.topbar{
+  height:var(--topbar);
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 1.2rem 0 1rem;
+  gap:.8rem;flex-shrink:0;
+  z-index:100;
+}
+.topbar-brand{display:flex;align-items:center;gap:.55rem;font-weight:700;font-size:.95rem;color:var(--parchment)}
+.topbar-brand svg{width:22px;height:22px}
+.topbar-badge{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:rgba(19,233,186,.15);color:var(--signal);border:1px solid rgba(19,233,186,.25);border-radius:4px;padding:.15rem .5rem}
+.topbar-spacer{flex:1}
+.topbar-btn{
+  background:none;border:1px solid var(--border);border-radius:7px;
+  color:var(--muted);font-size:.76rem;padding:.38rem .85rem;cursor:pointer;
+  display:flex;align-items:center;gap:.4rem;font-family:inherit;transition:all .2s;
+}
+.topbar-btn:hover{border-color:var(--signal);color:var(--parchment)}
+.topbar-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+.topbar-status{
+  display:flex;align-items:center;gap:.45rem;
+  font-size:.72rem;color:var(--muted);
+  border:1px solid var(--border);border-radius:7px;padding:.38rem .85rem;
+}
+.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.status-dot.live{background:var(--green)}
+.status-dot.maint{background:var(--amber)}
+.topbar-user{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--signal),var(--sigdim));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:700;color:var(--bg);cursor:pointer;
+  flex-shrink:0;
+}
+
+/* Main layout */
+.main-wrap{display:flex;flex:1;overflow:hidden}
+
+/* Sidebar */
+.sidebar{
+  width:var(--sidebar);flex-shrink:0;
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border)}
+.sb-section{padding:.7rem .75rem .4rem;font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.sb-link{
+  display:flex;align-items:center;gap:.65rem;
+  padding:.62rem .85rem;border-radius:8px;margin:0 .4rem .05rem;
+  cursor:pointer;font-size:.83rem;color:var(--muted);
+  transition:background .18s,color .18s;border:none;background:none;
+  font-family:inherit;text-align:left;width:calc(100% - .8rem);
+}
+.sb-link:hover{background:rgba(19,233,186,.05);color:var(--parchment)}
+.sb-link.active{background:rgba(19,233,186,.1);color:var(--parchment);font-weight:600}
+.sb-link svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0}
+.sb-badge{margin-left:auto;background:var(--spark);color:#fff;font-size:.58rem;font-weight:700;padding:.1rem .45rem;border-radius:100px}
+.sb-link.danger{color:rgba(239,68,68,.7)}
+.sb-link.danger:hover{background:rgba(239,68,68,.08);color:var(--red)}
+.sidebar-sep{height:1px;background:var(--border);margin:.4rem .85rem}
+
+/* Content */
+.content{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:var(--border)}
+.panel{display:none;padding:1.6rem 1.8rem}
+.panel.active{display:block}
+.panel-title{font-size:1.2rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.35rem}
+.panel-sub{font-size:.8rem;color:var(--muted);margin-bottom:1.6rem}
+.panel-row{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem}
+.panel-row.col3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:1100px){.panel-row{grid-template-columns:1fr}.panel-row.col3{grid-template-columns:1fr 1fr}}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.3rem}
+.card-title{font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--signal);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.card-title svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.stat-val{font-size:2rem;font-weight:700;letter-spacing:-.04em;line-height:1}
+.stat-val span{color:var(--signal)}
+.stat-lbl{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:.35rem}
+.stat-delta{font-size:.72rem;margin-top:.3rem;color:var(--green)}
+.stat-delta.neg{color:var(--red)}
+
+/* Toggle switch */
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.75rem 0;border-bottom:1px solid var(--border);
+}
+.toggle-row:last-child{border-bottom:none}
+.toggle-info h4{font-size:.87rem;font-weight:600;margin-bottom:.18rem}
+.toggle-info p{font-size:.75rem;color:var(--muted);line-height:1.5}
+.toggle-wrap{flex-shrink:0;margin-left:1.2rem}
+.tswitch{position:relative;display:inline-block;width:42px;height:24px}
+.tswitch input{opacity:0;width:0;height:0}
+.tslider{
+  position:absolute;inset:0;border-radius:24px;
+  background:rgba(255,255,255,.1);border:1px solid var(--border);
+  cursor:pointer;transition:background .25s,border-color .25s;
+}
+.tslider::before{
+  content:'';position:absolute;width:18px;height:18px;
+  left:2px;bottom:2px;border-radius:50%;
+  background:rgba(255,255,255,.4);
+  transition:transform .25s,background .25s;
+}
+.tswitch input:checked + .tslider{background:rgba(19,233,186,.25);border-color:var(--signal)}
+.tswitch input:checked + .tslider::before{transform:translateX(18px);background:var(--signal)}
+
+/* Input fields */
+.field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.85rem}
+.field label{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.field input,.field textarea,.field select{
+  background:var(--bg3);border:1px solid var(--border);border-radius:7px;
+  color:var(--parchment);font-size:.85rem;padding:.65rem .9rem;outline:none;
+  transition:border-color .2s;font-family:inherit;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--signal)}
+.field textarea{resize:vertical;min-height:80px}
+.field select option{background:var(--bg2)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+.color-field{display:flex;align-items:center;gap:.6rem}
+.color-field input[type=color]{width:36px;height:36px;padding:2px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);cursor:pointer}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;letter-spacing:.05em;padding:.62rem 1.2rem;border-radius:7px;cursor:pointer;transition:all .2s;border:none;font-family:inherit}
+.btn-primary{background:var(--signal);color:var(--bg)}.btn-primary:hover{background:var(--sigdim)}
+.btn-ghost{background:transparent;color:var(--parchment);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--signal);color:var(--signal)}
+.btn-danger{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}.btn-danger:hover{background:rgba(239,68,68,.2)}
+.btn-warning{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25)}.btn-warning:hover{background:rgba(245,158,11,.2)}
+.btn-success{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)}.btn-success:hover{background:rgba(34,197,94,.2)}
+.btn-purple{background:rgba(124,58,237,.15);color:#a78bfa;border:1px solid rgba(124,58,237,.3)}.btn-purple:hover{background:rgba(124,58,237,.25)}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+.btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.2rem}
+
+/* Banner alert */
+.alert{
+  display:flex;align-items:flex-start;gap:.7rem;
+  padding:.85rem 1rem;border-radius:8px;font-size:.8rem;line-height:1.55;
+  margin-bottom:1rem;
+}
+.alert svg{width:15px;height:15px;flex-shrink:0;margin-top:.1rem;stroke:currentColor;fill:none;stroke-width:2}
+.alert-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--amber)}
+.alert-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red)}
+.alert-info{background:rgba(19,233,186,.08);border:1px solid rgba(19,233,186,.2);color:var(--signal)}
+.alert-success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:var(--green)}
+
+/* Toast */
+#toast{
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:.75rem 1.3rem;font-size:.82rem;color:var(--parchment);
+  box-shadow:0 12px 36px rgba(0,0,0,.4);z-index:9999;
+  display:flex;align-items:center;gap:.55rem;white-space:nowrap;
+  transition:transform .35s cubic-bezier(.34,1.2,.64,1),opacity .35s;opacity:0;
+}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast .t-ico{width:16px;height:16px;flex-shrink:0}
+
+/* ── EDITOR PANEL ── */
+.editor-wrap{
+  display:flex;height:calc(100vh - var(--topbar));overflow:hidden;
+}
+.editor-sidebar{
+  width:280px;flex-shrink:0;
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.editor-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.editor-toolbar{
+  height:46px;background:var(--bg3);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 .85rem;gap:.4rem;flex-shrink:0;flex-wrap:wrap;
+}
+.et-btn{
+  background:none;border:1px solid var(--border);border-radius:5px;
+  color:var(--muted);font-size:.72rem;padding:.3rem .6rem;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;transition:all .18s;display:flex;align-items:center;gap:.3rem;
+}
+.et-btn:hover{background:rgba(19,233,186,.08);border-color:var(--signal);color:var(--parchment)}
+.et-btn.active{background:rgba(19,233,186,.12);border-color:var(--signal);color:var(--signal)}
+.et-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+.et-sep{width:1px;height:20px;background:var(--border);margin:0 .2rem}
+.editor-body{flex:1;display:flex;overflow:hidden}
+.code-pane{
+  flex:1;background:var(--bg);
+  padding:1rem;overflow:auto;
+  font-family:'JetBrains Mono',monospace;font-size:.78rem;
+  line-height:1.7;color:#abb2bf;outline:none;
+  white-space:pre;tab-size:2;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+  border:none;resize:none;
+}
+.preview-pane{
+  flex:1;border-left:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.preview-pane iframe{
+  width:100%;height:100%;border:none;
+  background:#fff;
+  transition:opacity .3s;
+}
+.preview-pane .preview-overlay{
+  position:absolute;top:.5rem;right:.5rem;
+  display:flex;gap:.4rem;
+}
+.pv-pill{
+  background:rgba(6,8,22,.85);border:1px solid var(--border);
+  border-radius:100px;font-size:.65rem;font-weight:700;
+  color:var(--muted);padding:.22rem .7rem;cursor:pointer;
+  transition:all .2s;backdrop-filter:blur(8px);
+}
+.pv-pill:hover,.pv-pill.active{background:var(--signal);color:var(--bg);border-color:var(--signal)}
+/* Editor sidebar sections */
+.es-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.es-tab{
+  flex:1;padding:.6rem .4rem;font-size:.72rem;font-weight:600;
+  text-align:center;cursor:pointer;color:var(--muted);
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;
+}
+.es-tab.active{color:var(--signal);border-bottom-color:var(--signal)}
+.es-body{flex:1;overflow-y:auto;padding:.75rem;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.es-section{margin-bottom:1rem}
+.es-section-title{font-size:.65rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.55rem}
+.content-item{
+  background:var(--bg3);border:1px solid var(--border);border-radius:7px;
+  padding:.7rem .85rem;margin-bottom:.45rem;cursor:pointer;
+  font-size:.8rem;transition:border-color .2s,background .2s;
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+}
+.content-item:hover{border-color:var(--signal);background:rgba(19,233,186,.04)}
+.content-item.active-item{border-color:var(--signal);background:rgba(19,233,186,.08)}
+.ci-label{font-weight:600;font-size:.78rem;flex:1}
+.ci-type{font-size:.62rem;color:var(--muted);background:rgba(255,255,255,.05);padding:.12rem .45rem;border-radius:4px}
+.ci-edit-area{
+  background:var(--bg3);border:1px solid rgba(19,233,186,.2);
+  border-radius:8px;padding:.85rem;margin-top:.3rem;
+}
+.ci-edit-area input,.ci-edit-area textarea{
+  width:100%;background:var(--bg2);border:1px solid var(--border);
+  border-radius:6px;color:var(--parchment);font-size:.8rem;padding:.55rem .8rem;
+  outline:none;font-family:inherit;margin-bottom:.45rem;
+}
+.ci-edit-area input:focus,.ci-edit-area textarea:focus{border-color:var(--signal)}
+.ci-edit-area textarea{min-height:70px;resize:vertical}
+.apply-btn{
+  width:100%;background:var(--signal);color:var(--bg);font-weight:700;
+  font-size:.76rem;padding:.55rem;border-radius:6px;border:none;cursor:pointer;font-family:inherit;
+}
+.apply-btn:hover{background:var(--sigdim)}
+
+/* Color theme editor */
+.color-swatch-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.45rem;margin-bottom:.85rem}
+.color-sw{
+  aspect-ratio:1;border-radius:6px;cursor:pointer;
+  border:2px solid transparent;transition:transform .15s,border-color .15s;position:relative;
+}
+.color-sw:hover,.color-sw.active-sw{transform:scale(1.12);border-color:var(--signal)}
+
+/* ── MAINTENANCE PAGE ── */
+#maintOverlay{
+  display:none;position:fixed;inset:0;z-index:9990;
+  background:var(--bg);align-items:center;justify-content:center;
+  flex-direction:column;padding:2rem;text-align:center;
+}
+#maintOverlay.on{display:flex}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .sidebar{width:52px}
+  .sb-link span,.sb-section,.sb-badge{display:none}
+  .sb-link{justify-content:center;padding:.65rem}
+  .sb-link svg{margin:0}
+  .panel-row,.panel-row.col3{grid-template-columns:1fr}
+  .editor-sidebar{width:220px}
+}
+@media(max-width:700px){
+  .editor-wrap{flex-direction:column}
+  .editor-sidebar{width:100%;height:200px}
+  .editor-body{flex-direction:column}
+  .preview-pane{height:300px;border-left:none;border-top:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg viewBox="0 0 320 90" xmlns="http://www.w3.org/2000/svg">
+        <line x1="28" y1="18" x2="50" y2="66" stroke="#E8E2D2" stroke-width="10" stroke-linecap="round"/>
+        <line x1="72" y1="18" x2="50" y2="66" stroke="#13E9BA" stroke-width="12" stroke-linecap="round"/>
+        <circle cx="50" cy="66" r="3.5" fill="#13E9BA"/>
+        <line x1="82" y1="46" x2="82" y2="40" stroke="#13E9BA" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="90" y1="46" x2="90" y2="34" stroke="#13E9BA" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="98" y1="46" x2="98" y2="26" stroke="#13E9BA" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="112" y="60" font-family="Ubuntu,sans-serif" font-weight="700" font-size="36" letter-spacing="-0.5"><tspan fill="#13E9BA">V</tspan><tspan fill="#E8E2D2">oxylis</tspan></text>
+      </svg>
+    </div>
+    <h2>Admin Panel</h2>
+    <p>Sign in to manage your website</p>
+    <div class="l-field"><label>Username</label><input type="text" id="loginUser" placeholder="admin" autocomplete="username"/></div>
+    <div class="l-field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <p class="l-err" id="loginErr"></p>
+    <button class="btn-login" onclick="doLogin()">Sign In</button>
+    <p class="login-hint">Default: <span>admin</span> / <span>voxylis2025</span></p>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="adminApp">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="3" x2="12" y2="18" stroke="#13E9BA" stroke-width="2.5" stroke-linecap="round"/><line x1="19" y1="3" x2="12" y2="18" stroke="#E8E2D2" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="18" r="1.5" fill="#13E9BA"/></svg>
+      Voxylis
+    </div>
+    <span class="topbar-badge">Admin</span>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-status" id="siteStatusBadge">
+      <span class="status-dot live" id="statusDot"></span>
+      <span id="statusTxt">Live</span>
+    </div>
+    <button class="topbar-btn" onclick="saveAllSettings()">
+      <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Save All
+    </button>
+    <button class="topbar-btn" onclick="previewSite()" id="previewBtn">
+      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Preview
+    </button>
+    <div class="topbar-user" title="Logged in as admin" onclick="doLogout()">A</div>
+  </div>
+
+  <div class="main-wrap">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div style="height:.5rem"></div>
+      <div class="sb-section">Dashboard</div>
+      <button class="sb-link active" onclick="showPanel('dashboard',this)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Overview</span>
+      </button>
+      <div class="sb-section">Site Management</div>
+      <button class="sb-link" onclick="showPanel('settings',this)">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+        <span>Settings</span>
+      </button>
+      <button class="sb-link" onclick="showPanel('maintenance',this)">
+        <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        <span>Maintenance</span>
+      </button>
+      <button class="sb-link" onclick="showPanel('ads',this)">
+        <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13 12H3"/></svg>
+        <span>Advertisements</span>
+        <span class="sb-badge" id="adsBadge">OFF</span>
+      </button>
+      <button class="sb-link" onclick="showPanel('whatsapp',this)">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span>WhatsApp</span>
+      </button>
+      <div class="sb-section">Content</div>
+      <button class="sb-link" onclick="showPanel('editor',this)">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>Website Editor</span>
+      </button>
+      <button class="sb-link" onclick="showPanel('seo',this)">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>SEO Manager</span>
+      </button>
+      <button class="sb-link" onclick="showPanel('pricing',this)">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Pricing</span>
+      </button>
+      <div class="sidebar-sep"></div>
+      <button class="sb-link danger" onclick="doLogout()">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Logout</span>
+      </button>
+      <div style="height:.5rem"></div>
+    </nav>
+
+    <!-- Content area -->
+    <div class="content" id="contentArea">
+
+      <!-- ═══ DASHBOARD ═══ -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="panel-title">Dashboard Overview</div>
+        <div class="panel-sub">Welcome back, Admin. Here's your site at a glance.</div>
+        <div class="panel-row col3">
+          <div class="card"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Active Visitors</div><div class="stat-val">4,<span>218</span></div><div class="stat-lbl">Websites hosted</div><div class="stat-delta">↑ +12 this week</div></div>
+          <div class="card"><div class="card-title"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Uptime</div><div class="stat-val">99.<span>9%</span></div><div class="stat-lbl">30-day average</div><div class="stat-delta">↑ Stable</div></div>
+          <div class="card"><div class="card-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Avg. Response</div><div class="stat-val">18<span>ms</span></div><div class="stat-lbl">Server latency</div><div class="stat-delta">↓ -3ms vs last week</div></div>
+        </div>
+        <div class="panel-row">
+          <div class="card">
+            <div class="card-title"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Site Status</div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Maintenance Mode</h4><p>When ON, visitors see maintenance page</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_maint" onchange="toggleMaintenance(this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Advertisement System</h4><p>Show/hide all ad banners sitewide</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_ads_dash" onchange="syncToggle('sw_ads',this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Promo Popup</h4><p>Show the discount popup to new visitors</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_popup_dash" checked onchange="syncToggle('sw_popup',this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>WhatsApp Widget</h4><p>Floating chat button in the corner</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_wa_dash" checked onchange="syncToggle('sw_wa',this.checked)"/><span class="tslider"></span></label></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Quick Actions</div>
+            <div style="display:flex;flex-direction:column;gap:.55rem">
+              <button class="btn btn-primary" onclick="showPanel('editor',null);showPanel('editor',document.querySelector('.sb-link:nth-child(9)'))">
+                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Open Website Editor
+              </button>
+              <button class="btn btn-ghost" onclick="previewSite()">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Preview Live Site
+              </button>
+              <button class="btn btn-ghost" onclick="showPanel('seo',null)">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Manage SEO
+              </button>
+              <button class="btn btn-warning" onclick="showPanel('maintenance',null);document.getElementById('sw_maint').checked=true;toggleMaintenance(true)">
+                <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                Enable Maintenance Mode
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SETTINGS ═══ -->
+      <div class="panel" id="panel-settings">
+        <div class="panel-title">Site Settings</div>
+        <div class="panel-sub">Configure all site-wide options. Changes save to localStorage and apply live.</div>
+        <div class="panel-row">
+          <div class="card">
+            <div class="card-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>General</div>
+            <div class="field"><label>Site Name</label><input type="text" id="s_sitename" value="Voxylis" oninput="liveApply()"/></div>
+            <div class="field"><label>Tagline</label><input type="text" id="s_tagline" value="Fast, Reliable Web Hosting & Digital Services" oninput="liveApply()"/></div>
+            <div class="field"><label>Contact Email</label><input type="email" id="s_email" value="support@voxylis.com"/></div>
+            <div class="field"><label>Phone Number</label><input type="tel" id="s_phone" value="+20 100 000 0000"/></div>
+            <div class="field"><label>Address</label><input type="text" id="s_address" value="Cairo, Egypt"/></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Features</div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Dark Mode Only</h4><p>Lock site to dark theme (currently always on)</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_dark" checked disabled/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Blog Section</h4><p>Show/hide the blog page in navigation</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_blog" checked onchange="toggleFeature('blog',this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Marketing Page</h4><p>Show/hide marketing services page</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_mkt" checked onchange="toggleFeature('marketing',this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Web Design Page</h4><p>Show/hide web design services page</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_design" checked onchange="toggleFeature('design',this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Annual Billing Toggle</h4><p>Show the monthly/annual billing switch</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_billing" checked onchange="toggleFeature('billing',this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Currency Switcher</h4><p>Allow visitors to switch USD/EGP</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_currency" checked onchange="toggleFeature('currency',this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Language Switcher</h4><p>Allow visitors to switch EN/AR</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_lang" checked onchange="toggleFeature('langswitch',this.checked)"/><span class="tslider"></span></label></div></div>
+          </div>
+        </div>
+        <div class="panel-row">
+          <div class="card">
+            <div class="card-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg>Social Media</div>
+            <div class="field-row">
+              <div class="field"><label>Twitter/X</label><input type="text" id="s_twitter" value="@voxylis" placeholder="@handle"/></div>
+              <div class="field"><label>Facebook</label><input type="text" id="s_fb" value="facebook.com/voxylis" placeholder="Page URL"/></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Instagram</label><input type="text" id="s_ig" value="@voxylis" placeholder="@handle"/></div>
+              <div class="field"><label>LinkedIn</label><input type="text" id="s_li" value="linkedin.com/company/voxylis"/></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>Analytics & Tracking</div>
+            <div class="field"><label>Google Analytics ID</label><input type="text" id="s_ga" placeholder="G-XXXXXXXXXX"/></div>
+            <div class="field"><label>Google Tag Manager ID</label><input type="text" id="s_gtm" placeholder="GTM-XXXXXXX"/></div>
+            <div class="field"><label>Facebook Pixel ID</label><input type="text" id="s_fbpx" placeholder="000000000000"/></div>
+            <div class="toggle-row" style="padding:.5rem 0 0"><div class="toggle-info"><h4>Cookie Consent Banner</h4><p>Show GDPR cookie notice to visitors</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_cookie"/><span class="tslider"></span></label></div></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveAllSettings()">
+            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Settings
+          </button>
+          <button class="btn btn-ghost" onclick="resetSettings()">Reset Defaults</button>
+        </div>
+      </div>
+
+      <!-- ═══ MAINTENANCE ═══ -->
+      <div class="panel" id="panel-maintenance">
+        <div class="panel-title">Maintenance Mode</div>
+        <div class="panel-sub">When active, all visitors see the maintenance page instead of your website.</div>
+        <div id="maintAlert" style="display:none"></div>
+        <div class="panel-row">
+          <div class="card">
+            <div class="card-title"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Maintenance Control</div>
+            <div class="toggle-row"><div class="toggle-info"><h4 id="maintToggleLabel">Maintenance Mode OFF</h4><p>Toggle to show maintenance page to all visitors</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_maint" onchange="toggleMaintenance(this.checked)"/><span class="tslider"></span></label></div></div>
+            <div style="margin-top:1.1rem">
+              <div class="field"><label>Maintenance Headline</label><input type="text" id="maint_title" value="We'll Be Right Back" oninput="updateMaintPreview()"/></div>
+              <div class="field"><label>Maintenance Message</label><textarea id="maint_msg" oninput="updateMaintPreview()">We're performing scheduled maintenance. We'll be back online shortly. Thank you for your patience!</textarea></div>
+              <div class="field"><label>Expected Back (optional)</label><input type="text" id="maint_eta" placeholder="e.g. Back in 2 hours" oninput="updateMaintPreview()"/></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Live Preview</div>
+            <div id="maintPreview" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2rem 1.5rem;text-align:center;min-height:200px">
+              <div style="display:flex;justify-content:center;gap:4px;margin-bottom:1.2rem">
+                <div style="width:5px;height:10px;background:var(--signal);border-radius:3px;opacity:.3;animation:bA 1.8s ease-in-out infinite"></div>
+                <div style="width:5px;height:16px;background:var(--signal);border-radius:3px;opacity:.3;animation:bA 1.8s .2s ease-in-out infinite"></div>
+                <div style="width:5px;height:22px;background:var(--signal);border-radius:3px;opacity:.4;animation:bA 1.8s .4s ease-in-out infinite"></div>
+                <div style="width:5px;height:16px;background:var(--signal);border-radius:3px;opacity:.2;animation:bA 1.8s .1s ease-in-out infinite"></div>
+                <div style="width:5px;height:10px;background:var(--signal);border-radius:3px;opacity:.1"></div>
+              </div>
+              <div style="font-size:1.3rem;font-weight:700;color:var(--parchment);margin-bottom:.5rem" id="mp_title">We'll Be Right Back</div>
+              <div style="font-size:.82rem;color:var(--muted);line-height:1.7;margin-bottom:.9rem" id="mp_msg">We're performing scheduled maintenance. We'll be back online shortly.</div>
+              <div style="font-size:.74rem;color:var(--signal)" id="mp_eta"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ADS ═══ -->
+      <div class="panel" id="panel-ads">
+        <div class="panel-title">Advertisement Manager</div>
+        <div class="panel-sub">Control all promotional banners and popups sitewide.</div>
+        <div class="panel-row">
+          <div class="card">
+            <div class="card-title"><svg viewBox="0 0 24 24"><rect x="1" y="6" width="22" height="12" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Ad Controls</div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Enable All Advertisements</h4><p>Master switch — disables all ads at once</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_ads" onchange="toggleAds(this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Promo Popup (20% Off)</h4><p>Shows after 4 seconds to new visitors</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_popup" checked onchange="syncToggle('sw_popup_dash',this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Header Banner</h4><p>Announcement bar above the navigation</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_banner" onchange="toggleHeaderBanner(this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Blog Sidebar Ads</h4><p>Promotional cards within blog articles</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_blogads" checked/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Exit Intent Popup</h4><p>Show an offer when visitor moves to leave</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_exit"/><span class="tslider"></span></label></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Customize Promo Popup</div>
+            <div class="field"><label>Headline</label><input type="text" id="ad_popup_h" value="Get 20% Off Your First Year" oninput="liveApplyAd()"/></div>
+            <div class="field"><label>Badge Text</label><input type="text" id="ad_popup_badge" value="🚀 Limited Time Offer" oninput="liveApplyAd()"/></div>
+            <div class="field-row">
+              <div class="field"><label>Discount Amount</label><input type="text" id="ad_popup_disc" value="20%" oninput="liveApplyAd()"/></div>
+              <div class="field"><label>Trial Days</label><input type="text" id="ad_popup_trial" value="14" oninput="liveApplyAd()"/></div>
+            </div>
+            <div class="field"><label>CTA Button Text</label><input type="text" id="ad_popup_cta" value="Claim Offer Now"/></div>
+            <div class="field"><label>Popup Delay (seconds)</label><input type="number" id="ad_popup_delay" value="4" min="1" max="60"/></div>
+            <div class="btn-row" style="margin-top:.8rem">
+              <button class="btn btn-primary" onclick="showPromoPopup()">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Preview Popup
+              </button>
+              <button class="btn btn-ghost" onclick="saveAdSettings()">Save Changes</button>
+            </div>
+          </div>
+        </div>
+        <!-- Header banner editor -->
+        <div class="card" id="headerBannerCard" style="display:none;margin-top:0">
+          <div class="card-title">Header Announcement Banner</div>
+          <div class="field"><label>Banner Message</label><input type="text" id="banner_msg" value="🎉 Get 20% off annual plans — Use code VOXYLIS20 at checkout!"/></div>
+          <div class="field-row">
+            <div class="field"><label>Background Color</label><div class="color-field"><input type="color" id="banner_bg" value="#13E9BA"/><span style="font-size:.78rem;color:var(--muted)">#13E9BA</span></div></div>
+            <div class="field"><label>Text Color</label><div class="color-field"><input type="color" id="banner_tc" value="#060816"/><span style="font-size:.78rem;color:var(--muted)">#060816</span></div></div>
+          </div>
+          <button class="btn btn-primary" onclick="applyHeaderBanner()">Apply Banner</button>
+        </div>
+      </div>
+
+      <!-- ═══ WHATSAPP ═══ -->
+      <div class="panel" id="panel-whatsapp">
+        <div class="panel-title">WhatsApp Widget Settings</div>
+        <div class="panel-sub">Customize the branded WhatsApp support widget.</div>
+        <div class="panel-row">
+          <div class="card">
+            <div class="card-title"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Widget Settings</div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Show WhatsApp Widget</h4><p>Display the floating chat button</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_wa" checked onchange="toggleWAWidget(this.checked);syncToggle('sw_wa_dash',this.checked)"/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Show Notification Badge</h4><p>Red badge on the FAB button</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_wa_badge" checked/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Auto-Show After Delay</h4><p>Automatically open panel after X seconds</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_wa_auto"/><span class="tslider"></span></label></div></div>
+            <div class="field" style="margin-top:.8rem"><label>WhatsApp Number (with country code)</label><input type="tel" id="wa_number" value="201000000000" placeholder="201000000000"/></div>
+            <div class="field"><label>Agent Display Name (EN)</label><input type="text" id="wa_name_en" value="Voxylis Support"/></div>
+            <div class="field"><label>Agent Display Name (AR)</label><input type="text" id="wa_name_ar" value="دعم فوكسيليس"/></div>
+            <div class="field"><label>Greeting Message (EN)</label><textarea id="wa_msg_en">How can we help you today? Type your question or tap Continue on WhatsApp to chat with our team.</textarea></div>
+            <div class="field"><label>Greeting Message (AR)</label><textarea id="wa_msg_ar">كيف يمكننا مساعدتك اليوم؟ اكتب سؤالك أو اضغط متابعة على واتساب للتحدث مع فريقنا.</textarea></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Live Preview</div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-width:300px">
+              <div style="background:linear-gradient(135deg,#0d2520,#0d1a14);border-bottom:1px solid rgba(19,233,186,.15);padding:12px 14px;display:flex;align-items:center;gap:10px">
+                <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#13E9BA,#0bb898);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#060816"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                </div>
+                <div>
+                  <div id="wa_prev_name" style="color:#E8E2D2;font-size:.88rem;font-weight:700">Voxylis Support</div>
+                  <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#13E9BA">Voxylis</div>
+                  <div style="font-size:.68rem;color:rgba(232,226,210,.5)">Typically replies in minutes</div>
+                </div>
+              </div>
+              <div style="background:#0d1228;padding:12px;min-height:80px">
+                <div style="background:#141933;border:1px solid rgba(19,233,186,.13);border-radius:0 10px 10px 10px;padding:9px 12px;font-size:.78rem;color:#E8E2D2;line-height:1.55">
+                  <p>👋 Hi! Welcome to <strong style="color:#13E9BA">Voxylis</strong>.</p>
+                  <p id="wa_prev_msg" style="margin-top:3px">How can we help you today?</p>
+                </div>
+              </div>
+              <div style="background:linear-gradient(135deg,#128C7E,#075E54);padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:.82rem;font-weight:700;color:#fff">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                Continue on WhatsApp
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" onclick="applyWASettings()">Apply Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ EDITOR ═══ -->
+      <div class="panel" id="panel-editor" style="padding:0">
+        <div class="editor-wrap">
+          <!-- Editor sidebar -->
+          <div class="editor-sidebar">
+            <div class="es-tabs">
+              <div class="es-tab active" onclick="editorTab('content',this)">Content</div>
+              <div class="es-tab" onclick="editorTab('styles',this)">Styles</div>
+              <div class="es-tab" onclick="editorTab('pages',this)">Pages</div>
+            </div>
+            <div class="es-body" id="esBody">
+              <!-- Content tab -->
+              <div id="es-content">
+                <div class="es-section">
+                  <div class="es-section-title">Hero Section</div>
+                  <div class="content-item" onclick="editContent('hero_title')"><span class="ci-label">Main Headline</span><span class="ci-type">text</span></div>
+                  <div class="content-item" onclick="editContent('hero_sub')"><span class="ci-label">Hero Subtitle</span><span class="ci-type">text</span></div>
+                  <div class="content-item" onclick="editContent('hero_btn1')"><span class="ci-label">Primary Button</span><span class="ci-type">text</span></div>
+                  <div class="content-item" onclick="editContent('hero_btn2')"><span class="ci-label">Secondary Button</span><span class="ci-type">text</span></div>
+                </div>
+                <div class="es-section">
+                  <div class="es-section-title">Navigation</div>
+                  <div class="content-item" onclick="editContent('nav_cta')"><span class="ci-label">CTA Button Text</span><span class="ci-type">text</span></div>
+                  <div class="content-item" onclick="editContent('brand_name')"><span class="ci-label">Brand Name</span><span class="ci-type">text</span></div>
+                </div>
+                <div class="es-section">
+                  <div class="es-section-title">Testimonials</div>
+                  <div class="content-item" onclick="editContent('t1_quote')"><span class="ci-label">Review 1 Quote</span><span class="ci-type">text</span></div>
+                  <div class="content-item" onclick="editContent('t1_name')"><span class="ci-label">Review 1 Name</span><span class="ci-type">text</span></div>
+                  <div class="content-item" onclick="editContent('t2_quote')"><span class="ci-label">Review 2 Quote</span><span class="ci-type">text</span></div>
+                  <div class="content-item" onclick="editContent('t2_name')"><span class="ci-label">Review 2 Name</span><span class="ci-type">text</span></div>
+                  <div class="content-item" onclick="editContent('t3_quote')"><span class="ci-label">Review 3 Quote</span><span class="ci-type">text</span></div>
+                </div>
+                <div class="es-section">
+                  <div class="es-section-title">Footer</div>
+                  <div class="content-item" onclick="editContent('footer_tag')"><span class="ci-label">Footer Tagline</span><span class="ci-type">text</span></div>
+                  <div class="content-item" onclick="editContent('footer_copy')"><span class="ci-label">Copyright Text</span><span class="ci-type">text</span></div>
+                </div>
+                <div id="contentEditBox" style="display:none;margin-top:.5rem"></div>
+              </div>
+              <!-- Styles tab -->
+              <div id="es-styles" style="display:none">
+                <div class="es-section">
+                  <div class="es-section-title">Brand Colors</div>
+                  <div class="field"><label>Accent (Signal)</label><div class="color-field"><input type="color" id="color_signal" value="#13E9BA" oninput="applyColorVar('--signal',this.value)"/><span style="font-size:.76rem;color:var(--muted)" id="color_signal_val">#13E9BA</span></div></div>
+                  <div class="field"><label>Background</label><div class="color-field"><input type="color" id="color_bg" value="#060816" oninput="applyColorVar('--bg',this.value)"/><span style="font-size:.76rem;color:var(--muted)">#060816</span></div></div>
+                  <div class="field"><label>Text (Parchment)</label><div class="color-field"><input type="color" id="color_parch" value="#E8E2D2" oninput="applyColorVar('--parchment',this.value)"/><span style="font-size:.76rem;color:var(--muted)">#E8E2D2</span></div></div>
+                  <div class="field"><label>CTA Spark Color</label><div class="color-field"><input type="color" id="color_spark" value="#FF6340" oninput="applyColorVar('--spark',this.value)"/><span style="font-size:.76rem;color:var(--muted)">#FF6340</span></div></div>
+                </div>
+                <div class="es-section">
+                  <div class="es-section-title">Typography</div>
+                  <div class="field"><label>Base Font Size</label><input type="range" id="font_size" min="13" max="18" value="16" oninput="document.getElementById('font_size_val').textContent=this.value+'px';applyFontSize(this.value)"/><span id="font_size_val" style="font-size:.74rem;color:var(--muted)">16px</span></div>
+                </div>
+                <div class="es-section">
+                  <div class="es-section-title">Quick Themes</div>
+                  <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                    <button class="btn btn-ghost" style="font-size:.7rem" onclick="applyTheme('dark')">Dark (Default)</button>
+                    <button class="btn btn-ghost" style="font-size:.7rem" onclick="applyTheme('midnight')">Midnight Blue</button>
+                    <button class="btn btn-ghost" style="font-size:.7rem" onclick="applyTheme('forest')">Forest Green</button>
+                    <button class="btn btn-ghost" style="font-size:.7rem" onclick="applyTheme('purple')">Deep Purple</button>
+                  </div>
+                </div>
+              </div>
+              <!-- Pages tab -->
+              <div id="es-pages" style="display:none">
+                <div class="es-section">
+                  <div class="es-section-title">Navigate to Page</div>
+                  <div class="content-item" onclick="previewPage('home')"><span class="ci-label">🏠 Home</span></div>
+                  <div class="content-item" onclick="previewPage('hosting')"><span class="ci-label">⚡ Hosting Plans</span></div>
+                  <div class="content-item" onclick="previewPage('design')"><span class="ci-label">🎨 Web Design</span></div>
+                  <div class="content-item" onclick="previewPage('marketing')"><span class="ci-label">📈 Marketing</span></div>
+                  <div class="content-item" onclick="previewPage('blog')"><span class="ci-label">📝 Blog</span></div>
+                  <div class="content-item" onclick="previewPage('about')"><span class="ci-label">ℹ️ About</span></div>
+                  <div class="content-item" onclick="previewPage('contact')"><span class="ci-label">📞 Contact</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Editor main -->
+          <div class="editor-main">
+            <div class="editor-toolbar">
+              <button class="et-btn active" id="btn_split" onclick="setEditorMode('split',this)" title="Split view">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+                Split
+              </button>
+              <button class="et-btn" id="btn_preview_only" onclick="setEditorMode('preview',this)" title="Preview only">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Preview
+              </button>
+              <button class="et-btn" id="btn_code_only" onclick="setEditorMode('code',this)" title="Code only">
+                <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                Code
+              </button>
+              <div class="et-sep"></div>
+              <button class="et-btn" onclick="formatCode()" title="Format code">
+                <svg viewBox="0 0 24 24"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
+                Format
+              </button>
+              <button class="et-btn" onclick="undoCode()" title="Undo"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></button>
+              <div class="et-sep"></div>
+              <button class="et-btn" onclick="saveAndPush()" title="Save & push live" style="background:rgba(19,233,186,.1);border-color:var(--signal);color:var(--signal)">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Save & Publish
+              </button>
+              <div class="et-sep"></div>
+              <div style="display:flex;gap:.3rem;margin-left:auto">
+                <button class="et-btn pv-pill active" id="pv_desktop" onclick="setPreviewSize('desktop',this)">🖥 Desktop</button>
+                <button class="et-btn pv-pill" id="pv_tablet" onclick="setPreviewSize('tablet',this)">📱 Tablet</button>
+                <button class="et-btn pv-pill" id="pv_mobile" onclick="setPreviewSize('mobile',this)">📲 Mobile</button>
+              </div>
+            </div>
+            <div class="editor-body" id="editorBody">
+              <textarea class="code-pane" id="codePane" spellcheck="false" oninput="debouncePreview()" onkeydown="handleEditorKey(event)"></textarea>
+              <div class="preview-pane" id="previewPane">
+                <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SEO ═══ -->
+      <div class="panel" id="panel-seo">
+        <div class="panel-title">SEO Manager</div>
+        <div class="panel-sub">Update meta tags, structured data, and search engine configuration.</div>
+        <div class="panel-row">
+          <div class="card">
+            <div class="card-title">Page Meta Tags</div>
+            <div class="field"><label>Select Page</label>
+              <select id="seo_page_sel" onchange="loadSEOPage(this.value)">
+                <option value="home">Home</option><option value="hosting">Hosting Plans</option>
+                <option value="design">Web Design</option><option value="marketing">Marketing</option>
+                <option value="blog">Blog</option><option value="about">About</option><option value="contact">Contact</option>
+              </select>
+            </div>
+            <div class="field"><label>Title Tag (EN)</label><input type="text" id="seo_title_en" value="Voxylis — Fast, Reliable Web Hosting & Digital Services"/></div>
+            <div class="field"><label>Meta Description (EN)</label><textarea id="seo_desc_en">Voxylis offers enterprise-grade web hosting, web design, and digital marketing. 99.9% uptime, NVMe SSD, free SSL, daily backups, and 24/7 multilingual support.</textarea></div>
+            <div class="field"><label>Title Tag (AR)</label><input type="text" id="seo_title_ar" value="فوكسيليس — استضافة ويب سريعة وموثوقة"/></div>
+            <div class="field"><label>Meta Description (AR)</label><textarea id="seo_desc_ar">استضافة ويب بمستوى المؤسسات للأعمال حول العالم. وقت تشغيل 99.9%، NVMe SSD، SSL مجاني.</textarea></div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="saveSEO()">Save SEO Changes</button></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Technical SEO</div>
+            <div class="toggle-row"><div class="toggle-info"><h4>XML Sitemap</h4><p>sitemap.xml is active and submitted</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_sitemap" checked/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>robots.txt</h4><p>Search engine crawling rules are set</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_robots" checked/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>JSON-LD Structured Data</h4><p>Organization, FAQPage, Service schemas</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_jsonld" checked/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Open Graph Tags</h4><p>Facebook/LinkedIn share previews</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_og" checked/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Twitter Cards</h4><p>Twitter/X share preview cards</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_twitter" checked/><span class="tslider"></span></label></div></div>
+            <div class="toggle-row"><div class="toggle-info"><h4>Canonical Tags</h4><p>Prevent duplicate content penalties</p></div><div class="toggle-wrap"><label class="tswitch"><input type="checkbox" id="sw_canonical" checked/><span class="tslider"></span></label></div></div>
+            <div class="field" style="margin-top:.8rem"><label>Canonical Base URL</label><input type="text" id="seo_canonical" value="https://voxylis.com"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PRICING ═══ -->
+      <div class="panel" id="panel-pricing">
+        <div class="panel-title">Pricing Manager</div>
+        <div class="panel-sub">Update hosting plan prices. Changes apply immediately sitewide.</div>
+        <div class="panel-row">
+          <div class="card">
+            <div class="card-title">Hosting Plans — Monthly (USD)</div>
+            <div class="field-row"><div class="field"><label>Starter / mo</label><input type="number" id="p_s_usdm" value="4.99" step="0.01" min="0"/></div><div class="field"><label>Business / mo</label><input type="number" id="p_b_usdm" value="12.99" step="0.01" min="0"/></div></div>
+            <div class="field-row"><div class="field"><label>Pro / mo</label><input type="number" id="p_p_usdm" value="24.99" step="0.01" min="0"/></div><div class="field"><label>Enterprise</label><input type="text" id="p_e_usdm" value="Custom" placeholder="Custom"/></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Hosting Plans — Monthly (EGP)</div>
+            <div class="field-row"><div class="field"><label>Starter / mo</label><input type="number" id="p_s_egpm" value="249" min="0"/></div><div class="field"><label>Business / mo</label><input type="number" id="p_b_egpm" value="649" min="0"/></div></div>
+            <div class="field-row"><div class="field"><label>Pro / mo</label><input type="number" id="p_p_egpm" value="1249" min="0"/></div><div class="field"><label>Enterprise</label><input type="text" id="p_e_egpm" value="Custom"/></div></div>
+          </div>
+        </div>
+        <div class="panel-row">
+          <div class="card">
+            <div class="card-title">Annual Discount %</div>
+            <div class="field"><label>Annual Plan Discount</label><input type="number" id="annual_disc" value="20" min="0" max="80" placeholder="20 = 20% off"/></div>
+            <div class="field"><label>Discount Badge Text</label><input type="text" id="annual_badge" value="Annual –20%"/></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Web Design Packages</div>
+            <div class="field-row"><div class="field"><label>Basic (USD)</label><input type="number" id="ds_basic_usd" value="299" min="0"/></div><div class="field"><label>Basic (EGP)</label><input type="number" id="ds_basic_egp" value="14999" min="0"/></div></div>
+            <div class="field-row"><div class="field"><label>Business (USD)</label><input type="number" id="ds_biz_usd" value="699" min="0"/></div><div class="field"><label>Business (EGP)</label><input type="number" id="ds_biz_egp" value="34999" min="0"/></div></div>
+            <div class="field-row"><div class="field"><label>Premium (USD)</label><input type="number" id="ds_prem_usd" value="1499" min="0"/></div><div class="field"><label>Premium (EGP)</label><input type="number" id="ds_prem_egp" value="74999" min="0"/></div></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="savePricing()">Apply Pricing Changes</button>
+          <button class="btn btn-ghost" onclick="resetPricing()">Reset Defaults</button>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main-wrap -->
+</div><!-- /adminApp -->
+
+<!-- TOAST -->
+<div id="toast">
+  <svg class="t-ico" viewBox="0 0 24 24" id="toastIco" xmlns="http://www.w3.org/2000/svg"></svg>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════
+var ADMIN_USER = 'admin';
+var ADMIN_PASS = 'voxylis2025';
+var _loggedIn  = false;
+
+function doLogin(){
+  var u = document.getElementById('loginUser').value.trim();
+  var p = document.getElementById('loginPass').value;
+  var e = document.getElementById('loginErr');
+  if(u===ADMIN_USER && p===ADMIN_PASS){
+    _loggedIn = true;
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('adminApp').classList.add('show');
+    loadSettings();
+    initEditor();
+    showToast('Welcome back, Admin!','success');
+  } else {
+    e.textContent = 'Invalid username or password.';
+    document.getElementById('loginPass').value='';
+    setTimeout(function(){ e.textContent=''; }, 3000);
+  }
+}
+
+function doLogout(){
+  if(!confirm('Sign out of admin panel?')) return;
+  _loggedIn = false;
+  document.getElementById('adminApp').classList.remove('show');
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginPass').value='';
+}
+
+// Enter key on login
+document.getElementById('loginPass').addEventListener('keydown',function(e){ if(e.key==='Enter') doLogin(); });
+
+// ══════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════
+function showPanel(id, btn){
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.sb-link').forEach(function(b){ b.classList.remove('active'); });
+  var p = document.getElementById('panel-'+id);
+  if(p) p.classList.add('active');
+  if(btn) btn.classList.add('active');
+  // if editor, load content
+  if(id==='editor') refreshEditorPreview();
+}
+
+// ══════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════
+var _toastTimer = null;
+function showToast(msg, type){
+  var t   = document.getElementById('toast');
+  var ico = document.getElementById('toastIco');
+  var txt = document.getElementById('toastMsg');
+  var icons = {
+    success:'<polyline points="20 6 9 17 4 12"/>',
+    error:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+    info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r=".5" fill="currentColor"/>',
+    warn:'<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/>'
+  };
+  var colors = {success:'#22C55E',error:'#EF4444',info:'#13E9BA',warn:'#F59E0B'};
+  ico.innerHTML = icons[type]||icons.info;
+  ico.setAttribute('stroke', colors[type]||'#13E9BA');
+  ico.setAttribute('fill','none');ico.setAttribute('stroke-width','2');
+  txt.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3200);
+}
+
+// ══════════════════════════════════════
+//  SETTINGS PERSISTENCE
+// ══════════════════════════════════════
+var SETTINGS_KEY = 'vx_admin_settings';
+
+function loadSettings(){
+  try{
+    var saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}');
+    Object.keys(saved).forEach(function(k){
+      var el = document.getElementById(k);
+      if(!el) return;
+      if(el.type==='checkbox') el.checked = saved[k];
+      else el.value = saved[k];
+    });
+    // Apply maintenance state
+    if(saved.sw_maint) toggleMaintenance(true, true);
+    if(saved.sw_ads !== undefined) toggleAds(saved.sw_ads, true);
+    updateStatusBar();
+  }catch(e){}
+}
+
+function saveAllSettings(){
+  var settings = {};
+  var saveIds = ['sw_maint','sw_ads','sw_popup','sw_banner','sw_wa','sw_blog','sw_mkt','sw_design','sw_billing','sw_currency','sw_lang','s_sitename','s_tagline','s_email','s_phone','s_address','s_twitter','s_ga','wa_number','wa_name_en','wa_name_ar','wa_msg_en','wa_msg_ar','maint_title','maint_msg','maint_eta','ad_popup_h','ad_popup_badge','ad_popup_disc','ad_popup_trial','ad_popup_delay','annual_disc','annual_badge'];
+  saveIds.forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el) return;
+    settings[id] = el.type==='checkbox' ? el.checked : el.value;
+  });
+  try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }catch(e){}
+  showToast('All settings saved successfully!','success');
+  updateStatusBar();
+  applySettingsToSite();
+}
+
+function resetSettings(){
+  if(!confirm('Reset all settings to defaults?')) return;
+  localStorage.removeItem(SETTINGS_KEY);
+  location.reload();
+}
+
+function syncToggle(targetId, val){
+  var el = document.getElementById(targetId);
+  if(el) el.checked = val;
+  updateStatusBar();
+}
+
+// ══════════════════════════════════════
+//  MAINTENANCE
+// ══════════════════════════════════════
+function toggleMaintenance(on, silent){
+  var labels = {on:'⚠️ Maintenance Mode ACTIVE', off:'Maintenance Mode OFF'};
+  var lbl = document.getElementById('maintToggleLabel');
+  if(lbl) lbl.textContent = on ? labels.on : labels.off;
+  var sw1 = document.getElementById('sw_maint');
+  if(sw1) sw1.checked = on;
+  updateStatusBar();
+  // Push to site localStorage
+  try{ localStorage.setItem('vx_maintenance', on ? '1' : '0'); }catch(e){}
+  if(!silent){
+    if(on){
+      showToast('⚠️ Maintenance mode enabled — visitors see maintenance page','warn');
+    } else {
+      showToast('✅ Site is live again','success');
+    }
+  }
+  var al = document.getElementById('maintAlert');
+  if(al){
+    if(on){
+      al.innerHTML = '<div class="alert alert-warn"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><span><strong>Maintenance mode is ON.</strong> All visitors are currently seeing the maintenance page.</span></div>';
+      al.style.display='block';
+    } else {
+      al.style.display='none';
+    }
+  }
+}
+
+function updateMaintPreview(){
+  var t = document.getElementById('maint_title');
+  var m = document.getElementById('maint_msg');
+  var e = document.getElementById('maint_eta');
+  var pt = document.getElementById('mp_title');
+  var pm = document.getElementById('mp_msg');
+  var pe = document.getElementById('mp_eta');
+  if(pt && t) pt.textContent = t.value;
+  if(pm && m) pm.textContent = m.value;
+  if(pe && e) pe.textContent = e.value ? '⏱ '+e.value : '';
+}
+
+// ══════════════════════════════════════
+//  ADS
+// ══════════════════════════════════════
+function toggleAds(on, silent){
+  var badge = document.getElementById('adsBadge');
+  if(badge){ badge.textContent=on?'ON':'OFF'; badge.style.background=on?'var(--green)':'var(--spark)'; }
+  try{ localStorage.setItem('vx_ads_enabled', on?'1':'0'); }catch(e){}
+  if(!silent) showToast(on?'Advertisements enabled':'Advertisements disabled', on?'success':'info');
+}
+
+function saveAdSettings(){
+  saveAllSettings();
+  showToast('Ad settings saved!','success');
+}
+
+function showPromoPopup(){
+  showToast('Opening popup preview — switch to site tab','info');
+  previewSite();
+}
+
+function toggleHeaderBanner(on){
+  var card = document.getElementById('headerBannerCard');
+  if(card) card.style.display = on ? 'block' : 'none';
+}
+
+function applyHeaderBanner(){
+  showToast('Header banner applied — visible on next save','success');
+}
+
+// ══════════════════════════════════════
+//  WHATSAPP SETTINGS
+// ══════════════════════════════════════
+function toggleWAWidget(on){
+  try{ localStorage.setItem('vx_wa_enabled', on?'1':'0'); }catch(e){}
+  showToast(on?'WhatsApp widget enabled':'WhatsApp widget hidden','info');
+}
+
+function applyWASettings(){
+  var nameEl = document.getElementById('wa_name_en');
+  var prevEl = document.getElementById('wa_prev_name');
+  var msgEl  = document.getElementById('wa_msg_en');
+  var prevMsg = document.getElementById('wa_prev_msg');
+  if(nameEl && prevEl) prevEl.textContent = nameEl.value;
+  if(msgEl && prevMsg){ var words = msgEl.value.split(' ').slice(0,8).join(' '); prevMsg.textContent = words + (msgEl.value.split(' ').length>8?'...':''); }
+  saveAllSettings();
+  showToast('WhatsApp settings applied!','success');
+}
+
+// ══════════════════════════════════════
+//  FEATURES TOGGLE
+// ══════════════════════════════════════
+function toggleFeature(feature, on){
+  try{ localStorage.setItem('vx_feat_'+feature, on?'1':'0'); }catch(e){}
+  showToast((on?'Enabled: ':'Disabled: ')+feature,'info');
+}
+
+// ══════════════════════════════════════
+//  STATUS BAR
+// ══════════════════════════════════════
+function updateStatusBar(){
+  var maint   = document.getElementById('sw_maint');
+  var dot     = document.getElementById('statusDot');
+  var txt     = document.getElementById('statusTxt');
+  var isLive  = !(maint && maint.checked);
+  if(dot){ dot.className = 'status-dot '+(isLive?'live':'maint'); }
+  if(txt){ txt.textContent = isLive ? 'Live' : 'Maintenance'; }
+}
+
+// ══════════════════════════════════════
+//  PREVIEW SITE
+// ══════════════════════════════════════
+function previewSite(){
+  window.open('index.html','_blank','noopener');
+}
+
+// ══════════════════════════════════════
+//  APPLY SETTINGS TO SITE
+// ══════════════════════════════════════
+function applySettingsToSite(){
+  var maint = document.getElementById('sw_maint');
+  var ads   = document.getElementById('sw_ads');
+  try{
+    localStorage.setItem('vx_maintenance', (maint&&maint.checked)?'1':'0');
+    localStorage.setItem('vx_ads_enabled', (ads&&ads.checked)?'1':'0');
+  }catch(e){}
+}
+
+// ══════════════════════════════════════
+//  EDITOR
+// ══════════════════════════════════════
+var _editorDebounce = null;
+var _editorHistory  = [];
+var _historyIdx     = -1;
+var _SITE_URL       = 'index.html';
+var _editorMode     = 'split';
+var _previewSize    = 'desktop';
+
+function initEditor(){
+  fetch(_SITE_URL)
+    .then(function(r){ return r.text(); })
+    .then(function(html){
+      var cp = document.getElementById('codePane');
+      if(cp){ cp.value = html; pushHistory(html); }
+      refreshEditorPreview();
+    })
+    .catch(function(){
+      var cp = document.getElementById('codePane');
+      if(cp){ cp.value = '<!-- Could not load index.html — paste your HTML here -->'; }
+    });
+}
+
+function debouncePreview(){
+  clearTimeout(_editorDebounce);
+  _editorDebounce = setTimeout(refreshEditorPreview, 600);
+}
+
+function refreshEditorPreview(){
+  var cp = document.getElementById('codePane');
+  var frame = document.getElementById('previewFrame');
+  if(!cp||!frame) return;
+  var html = cp.value;
+  try{
+    var doc = frame.contentDocument || frame.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+  }catch(e){}
+}
+
+function setEditorMode(mode, btn){
+  _editorMode = mode;
+  document.querySelectorAll('.et-btn[id^="btn_"]').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  var cp = document.getElementById('codePane');
+  var pp = document.getElementById('previewPane');
+  if(!cp||!pp) return;
+  if(mode==='split'){ cp.style.display=''; pp.style.display=''; }
+  else if(mode==='preview'){ cp.style.display='none'; pp.style.display=''; }
+  else if(mode==='code'){ cp.style.display=''; pp.style.display='none'; }
+}
+
+function setPreviewSize(size, btn){
+  _previewSize = size;
+  document.querySelectorAll('.et-btn.pv-pill').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  var frame = document.getElementById('previewFrame');
+  var pane  = document.getElementById('previewPane');
+  if(!frame||!pane) return;
+  var sizes = {desktop:{w:'100%',mx:'none'},tablet:{w:'768px',mx:'768px'},mobile:{w:'390px',mx:'390px'}};
+  var s = sizes[size]||sizes.desktop;
+  frame.style.width = s.w;
+  frame.style.maxWidth = s.mx;
+  pane.style.overflow = size==='desktop'?'hidden':'auto';
+}
+
+function saveAndPush(){
+  var cp = document.getElementById('codePane');
+  if(!cp){ showToast('Editor not ready','error'); return; }
+  var html = cp.value;
+  pushHistory(html);
+  // In real deployment: POST to server. Here we save to localStorage for demo.
+  try{
+    localStorage.setItem('vx_site_html', html);
+    showToast('✅ Changes saved & published!','success');
+    refreshEditorPreview();
+  }catch(e){
+    showToast('Failed to save: '+e.message,'error');
+  }
+}
+
+function pushHistory(html){
+  _editorHistory.splice(_historyIdx+1);
+  _editorHistory.push(html);
+  if(_editorHistory.length > 50) _editorHistory.shift();
+  _historyIdx = _editorHistory.length - 1;
+}
+
+function undoCode(){
+  if(_historyIdx > 0){
+    _historyIdx--;
+    var cp = document.getElementById('codePane');
+    if(cp){ cp.value = _editorHistory[_historyIdx]; refreshEditorPreview(); }
+    showToast('Undone','info');
+  }
+}
+
+function handleEditorKey(e){
+  var cp = e.target;
+  if(e.key==='Tab'){
+    e.preventDefault();
+    var start = cp.selectionStart;
+    var end   = cp.selectionEnd;
+    cp.value  = cp.value.substring(0,start)+'  '+cp.value.substring(end);
+    cp.selectionStart = cp.selectionEnd = start+2;
+    debouncePreview();
+  }
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); saveAndPush(); }
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){ e.preventDefault(); undoCode(); }
+}
+
+function formatCode(){
+  var cp = document.getElementById('codePane');
+  if(!cp) return;
+  // Basic indent: preserve as-is (real formatter would use js-beautify)
+  showToast('Code formatting — install js-beautify for full support','info');
+}
+
+function editorTab(tab, btn){
+  document.querySelectorAll('.es-tab').forEach(function(t){ t.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  ['content','styles','pages'].forEach(function(t){
+    var el = document.getElementById('es-'+t);
+    if(el) el.style.display = t===tab ? '' : 'none';
+  });
+}
+
+function previewPage(page){
+  var frame = document.getElementById('previewFrame');
+  if(!frame||!frame.contentWindow) return;
+  try{
+    if(typeof frame.contentWindow.go === 'function') frame.contentWindow.go(page);
+    else refreshEditorPreview();
+  }catch(e){}
+}
+
+// ── Content item editing ──
+var CONTENT_MAP = {
+  hero_title:  {label:'Main Headline', ids:['h_h1'], type:'html'},
+  hero_sub:    {label:'Hero Subtitle', ids:['h_sub'], type:'text'},
+  hero_btn1:   {label:'Primary Button Text', ids:['h_b1'], type:'text'},
+  hero_btn2:   {label:'Secondary Button Text', ids:['h_b2'], type:'text'},
+  nav_cta:     {label:'Nav CTA Button', ids:['navCta','mob-cta'], type:'text'},
+  brand_name:  {label:'Brand Name (Logo Text)', ids:[], type:'text'},
+  t1_quote:    {label:'Review 1 Quote', ids:['testis'], type:'note', note:'Edit in main.js: BLOG_POSTS[0] or T.en.t1q'},
+  t1_name:     {label:'Review 1 Author', ids:[], type:'note', note:'Edit T.en.t1n in main.js'},
+  t2_quote:    {label:'Review 2 Quote', ids:[], type:'note', note:'Edit T.en.t2q in main.js'},
+  t2_name:     {label:'Review 2 Author', ids:[], type:'note', note:'Edit T.en.t2n in main.js'},
+  t3_quote:    {label:'Review 3 Quote', ids:[], type:'note', note:'Edit T.en.t3q in main.js'},
+  footer_tag:  {label:'Footer Tagline', ids:['ft_tag'], type:'text'},
+  footer_copy: {label:'Copyright', ids:['ft_copy'], type:'text'},
+};
+
+var _activeContent = null;
+
+function editContent(key){
+  _activeContent = key;
+  var map = CONTENT_MAP[key];
+  if(!map) return;
+  document.querySelectorAll('.content-item').forEach(function(ci){ ci.classList.remove('active-item'); });
+  event.currentTarget.classList.add('active-item');
+  var box = document.getElementById('contentEditBox');
+  if(!box) return;
+  if(map.type==='note'){
+    box.innerHTML = '<div class="ci-edit-area"><p style="font-size:.78rem;color:var(--amber);line-height:1.6">ℹ️ '+map.note+'</p></div>';
+    box.style.display='block';
+    return;
+  }
+  var frame  = document.getElementById('previewFrame');
+  var curVal = '';
+  try{
+    if(frame && frame.contentDocument && map.ids.length){
+      var el = frame.contentDocument.getElementById(map.ids[0]);
+      if(el) curVal = el.textContent || el.innerHTML || '';
+    }
+  }catch(e){}
+  box.innerHTML = '<div class="ci-edit-area">'+(map.type==='html'?'<textarea id="ciInput" style="width:100%;min-height:70px">'+curVal+'</textarea>':'<input type="text" id="ciInput" value="'+curVal.replace(/"/g,'&quot;')+'"/>')+'<button class="apply-btn" onclick="applyContentEdit()">Apply to Preview</button></div>';
+  box.style.display='block';
+}
+
+function applyContentEdit(){
+  if(!_activeContent) return;
+  var map   = CONTENT_MAP[_activeContent];
+  var input = document.getElementById('ciInput');
+  var frame = document.getElementById('previewFrame');
+  if(!map||!input||!frame||!frame.contentDocument) return;
+  var val = input.value;
+  map.ids.forEach(function(id){
+    try{
+      var el = frame.contentDocument.getElementById(id);
+      if(el){ if(map.type==='html') el.innerHTML=val; else el.textContent=val; }
+    }catch(e){}
+  });
+  // Also update code pane
+  showToast('Applied to preview — click Save & Publish to make permanent','info');
+}
+
+function applyColorVar(varName, value){
+  var frame = document.getElementById('previewFrame');
+  try{
+    if(frame && frame.contentDocument){
+      frame.contentDocument.documentElement.style.setProperty(varName, value);
+    }
+  }catch(e){}
+  var valId = varName.replace('--','color_')+'_val';
+  var el = document.getElementById(varName.replace('--','color_')+'_val');
+  if(!el) el = document.querySelectorAll('.color-field span')[0];
+}
+
+function applyFontSize(val){
+  var frame = document.getElementById('previewFrame');
+  try{
+    if(frame && frame.contentDocument){
+      frame.contentDocument.body.style.fontSize = val+'px';
+    }
+  }catch(e){}
+}
+
+var THEMES = {
+  dark:     {signal:'#13E9BA',bg:'#060816',parchment:'#E8E2D2',spark:'#FF6340'},
+  midnight: {signal:'#60A5FA',bg:'#060C1A',parchment:'#EAF0FF',spark:'#F472B6'},
+  forest:   {signal:'#4ADE80',bg:'#051008',parchment:'#E8F5E0',spark:'#FBBF24'},
+  purple:   {signal:'#A78BFA',bg:'#0D0616',parchment:'#EDE8FF',spark:'#FB923C'},
+};
+
+function applyTheme(name){
+  var t = THEMES[name];
+  if(!t) return;
+  var frame = document.getElementById('previewFrame');
+  try{
+    if(frame && frame.contentDocument){
+      var r = frame.contentDocument.documentElement;
+      Object.entries(t).forEach(function(kv){ r.style.setProperty('--'+kv[0], kv[1]); });
+    }
+  }catch(e){}
+  document.getElementById('color_signal').value = t.signal;
+  document.getElementById('color_bg').value     = t.bg;
+  document.getElementById('color_parch').value  = t.parchment;
+  document.getElementById('color_spark').value  = t.spark;
+  showToast('Theme applied — Save & Publish to keep','info');
+}
+
+// ══════════════════════════════════════
+//  SEO MANAGER
+// ══════════════════════════════════════
+var SEO_DATA = {
+  home:    {en_title:'Voxylis — Fast, Reliable Web Hosting & Digital Services',ar_title:'فوكسيليس — استضافة ويب سريعة وموثوقة',en_desc:'Enterprise-grade web hosting for businesses worldwide.',ar_desc:'استضافة ويب بمستوى المؤسسات للأعمال حول العالم.'},
+  hosting: {en_title:'Web Hosting Plans — Voxylis',ar_title:'خطط استضافة الويب — فوكسيليس',en_desc:'NVMe SSD hosting from $4.99/month.',ar_desc:'استضافة NVMe SSD من 4.99$/شهر.'},
+  design:  {en_title:'Web Design Services — Voxylis',ar_title:'خدمات تصميم المواقع — فوكسيليس',en_desc:'Mobile-first web design packages from $299.',ar_desc:'باقات تصميم مواقع تبدأ من 299$.'},
+  marketing:{en_title:'Digital Marketing Services — Voxylis',ar_title:'خدمات التسويق الرقمي — فوكسيليس',en_desc:'Full-service SEO, social, ads from $199/mo.',ar_desc:'تسويق رقمي متكامل من 199$/شهر.'},
+  blog:    {en_title:'Web Hosting & SEO Blog — Voxylis',ar_title:'مدونة الاستضافة والسيو — فوكسيليس',en_desc:'Expert guides on hosting, SEO, design, and marketing.',ar_desc:'أدلة خبراء في الاستضافة والسيو والتسويق.'},
+  about:   {en_title:'About Voxylis — Our Story',ar_title:'عن فوكسيليس — قصتنا',en_desc:'Founded in 2019, hosting 4,000+ websites worldwide.',ar_desc:'تأسست عام 2019، نستضيف أكثر من 4,000 موقع.'},
+  contact: {en_title:'Contact Voxylis — Get in Touch',ar_title:'تواصل مع فوكسيليس',en_desc:'Contact us for hosting, design, or marketing inquiries.',ar_desc:'تواصل معنا لاستفسارات الاستضافة أو التصميم.'},
+};
+
+function loadSEOPage(page){
+  var d = SEO_DATA[page]||{};
+  var set = function(id,val){ var e=document.getElementById(id); if(e) e.value=val||''; };
+  set('seo_title_en', d.en_title);
+  set('seo_title_ar', d.ar_title);
+  set('seo_desc_en',  d.en_desc);
+  set('seo_desc_ar',  d.ar_desc);
+}
+
+function saveSEO(){
+  var page = document.getElementById('seo_page_sel').value;
+  SEO_DATA[page] = {
+    en_title: document.getElementById('seo_title_en').value,
+    ar_title: document.getElementById('seo_title_ar').value,
+    en_desc:  document.getElementById('seo_desc_en').value,
+    ar_desc:  document.getElementById('seo_desc_ar').value,
+  };
+  try{ localStorage.setItem('vx_seo_data', JSON.stringify(SEO_DATA)); }catch(e){}
+  showToast('SEO data saved for '+page,'success');
+}
+
+// ══════════════════════════════════════
+//  PRICING
+// ══════════════════════════════════════
+function savePricing(){
+  var pricing = {
+    s_usdm: document.getElementById('p_s_usdm').value,
+    b_usdm: document.getElementById('p_b_usdm').value,
+    p_usdm: document.getElementById('p_p_usdm').value,
+    s_egpm: document.getElementById('p_s_egpm').value,
+    b_egpm: document.getElementById('p_b_egpm').value,
+    p_egpm: document.getElementById('p_p_egpm').value,
+    annual_disc: document.getElementById('annual_disc').value,
+    ds_basic_usd: document.getElementById('ds_basic_usd').value,
+    ds_biz_usd:   document.getElementById('ds_biz_usd').value,
+    ds_prem_usd:  document.getElementById('ds_prem_usd').value,
+    ds_basic_egp: document.getElementById('ds_basic_egp').value,
+    ds_biz_egp:   document.getElementById('ds_biz_egp').value,
+    ds_prem_egp:  document.getElementById('ds_prem_egp').value,
+  };
+  try{ localStorage.setItem('vx_pricing', JSON.stringify(pricing)); }catch(e){}
+  showToast('Pricing updated — reload site to see changes','success');
+}
+
+function resetPricing(){
+  try{ localStorage.removeItem('vx_pricing'); }catch(e){}
+  location.reload();
+}
+
+// ══════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════
+updateMaintPreview();
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape' && _loggedIn){
+    var panels = document.querySelectorAll('.panel.active');
+    // no overlay to close
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <url>
+    <loc>https://voxylis.com/</loc>
+    <lastmod>2026-04-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://voxylis.com/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://voxylis.com/?lang=ar"/>
+  </url>
+
+  <url>
+    <loc>https://voxylis.com/?page=hosting</loc>
+    <lastmod>2026-04-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://voxylis.com/?page=hosting"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://voxylis.com/?page=hosting&amp;lang=ar"/>
+  </url>
+
+  <url>
+    <loc>https://voxylis.com/?page=design</loc>
+    <lastmod>2026-04-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://voxylis.com/?page=design"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://voxylis.com/?page=design&amp;lang=ar"/>
+  </url>
+
+  <url>
+    <loc>https://voxylis.com/?page=marketing</loc>
+    <lastmod>2026-04-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://voxylis.com/?page=marketing"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://voxylis.com/?page=marketing&amp;lang=ar"/>
+  </url>
+
+  <url>
+    <loc>https://voxylis.com/?page=blog</loc>
+    <lastmod>2026-04-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://voxylis.com/?page=blog"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://voxylis.com/?page=blog&amp;lang=ar"/>
+  </url>
+
+  <url>
+    <loc>https://voxylis.com/?page=about</loc>
+    <lastmod>2026-04-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://voxylis.com/?page=about"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://voxylis.com/?page=about&amp;lang=ar"/>
+  </url>
+
+  <url>
+    <loc>https://voxylis.com/?page=contact</loc>
+    <lastmod>2026-04-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://voxylis.com/?page=contact"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://voxylis.com/?page=contact&amp;lang=ar"/>
+  </url>
+
+  <!-- Blog articles -->
+  <url>
+    <loc>https://voxylis.com/?page=blog&amp;article=1</loc>
+    <lastmod>2025-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://voxylis.com/?page=blog&amp;article=2</loc>
+    <lastmod>2025-04-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://voxylis.com/?page=blog&amp;article=3</loc>
+    <lastmod>2025-03-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://voxylis.com/?page=blog&amp;article=4</loc>
+    <lastmod>2025-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://voxylis.com/?page=blog&amp;article=5</loc>
+    <lastmod>2025-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://voxylis.com/?page=blog&amp;article=6</loc>
+    <lastmod>2025-02-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>

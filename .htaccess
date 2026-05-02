@@ -1,0 +1,286 @@
+# ══════════════════════════════════════════════════════════════
+#  Voxylis — Apache .htaccess
+#  Cloudflare + cPanel compatible | Security + Performance + SEO
+#  Version: 3.0 | 2025
+# ══════════════════════════════════════════════════════════════
+
+Options -Indexes -MultiViews
+ServerSignature Off
+
+# ── REWRITE ENGINE ──────────────────────────────────────────
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Force HTTPS (Cloudflare handles SSL, but also enforce at origin)
+  # NOTE: When behind Cloudflare, use CF SSL=Full or comment this out
+  # to avoid redirect loops. Uncomment if NOT behind Cloudflare proxy:
+  # RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  # RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+  # Force non-www (Cloudflare handles www redirect in Page Rules)
+  # Remove or configure per your Cloudflare setup:
+  # RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  # RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+  # Remove trailing slash (except directories)
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)/$ /$1 [R=301,L]
+
+  # Single Page Application — serve index.html for all non-file routes
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+
+  # Block access to hidden files (.htaccess, .git, etc.)
+  RewriteRule (^|/)\. - [F,L]
+</IfModule>
+
+# ── SECURITY HEADERS ────────────────────────────────────────
+<IfModule mod_headers.c>
+
+  # Strict Transport Security (2 years, include subdomains)
+  # Note: Cloudflare also sets this — keep for origin-direct requests
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" env=HTTPS
+
+  # Prevent MIME sniffing
+  Header always set X-Content-Type-Options "nosniff"
+
+  # Clickjacking protection
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # XSS Protection (legacy browsers)
+  Header always set X-XSS-Protection "1; mode=block"
+
+  # Referrer policy
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Permissions policy — disable unused browser features
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), display-capture=()"
+
+  # Content Security Policy
+  # Adjust as needed — allows Google Fonts, WhatsApp, Anthropic API
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.anthropic.com https://wa.me; frame-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;"
+
+  # Remove server information
+  Header always unset X-Powered-By
+  Header always unset Server
+
+  # CORP / COEP / COOP for security isolation
+  Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+  Header always set Cross-Origin-Resource-Policy "same-origin"
+</IfModule>
+
+# ── BROWSER CACHING ──────────────────────────────────────────
+# Cloudflare also caches these, but we set headers for direct/origin requests.
+# Cloudflare respects Cache-Control headers from origin.
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # HTML — short cache, always revalidate
+  ExpiresByType text/html                 "access plus 1 hour"
+
+  # CSS & JavaScript
+  ExpiresByType text/css                  "access plus 1 year"
+  ExpiresByType application/javascript    "access plus 1 year"
+  ExpiresByType text/javascript           "access plus 1 year"
+
+  # Images
+  ExpiresByType image/jpeg                "access plus 1 year"
+  ExpiresByType image/png                 "access plus 1 year"
+  ExpiresByType image/gif                 "access plus 1 year"
+  ExpiresByType image/webp                "access plus 1 year"
+  ExpiresByType image/svg+xml             "access plus 1 year"
+  ExpiresByType image/x-icon              "access plus 1 year"
+  ExpiresByType image/vnd.microsoft.icon  "access plus 1 year"
+
+  # Fonts
+  ExpiresByType font/woff                 "access plus 1 year"
+  ExpiresByType font/woff2                "access plus 1 year"
+  ExpiresByType application/font-woff     "access plus 1 year"
+  ExpiresByType application/font-woff2    "access plus 1 year"
+
+  # Data formats
+  ExpiresByType application/json          "access plus 0 seconds"
+  ExpiresByType application/xml           "access plus 0 seconds"
+
+  # Service Worker — never cache (always fresh)
+  ExpiresByType application/javascript    "access plus 0 seconds"
+  <FilesMatch "sw\.js$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+  </FilesMatch>
+
+  # Manifest
+  ExpiresByType application/manifest+json "access plus 1 week"
+  ExpiresByType text/cache-manifest       "access plus 0 seconds"
+</IfModule>
+
+# ── CACHE-CONTROL HEADERS ─────────────────────────────────
+<IfModule mod_headers.c>
+
+  # Immutable static assets (versioned by Cloudflare/browser)
+  <FilesMatch "\.(css|js|png|jpg|jpeg|gif|webp|svg|woff|woff2|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # HTML — must-revalidate
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=3600, must-revalidate"
+  </FilesMatch>
+
+  # Service Worker — no cache
+  <FilesMatch "sw\.js$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Service-Worker-Allowed "/"
+  </FilesMatch>
+
+  # Cloudflare-specific: hint to cache at edge
+  <FilesMatch "\.(css|js|png|jpg|jpeg|gif|webp|svg|woff|woff2|ico)$">
+    Header set CDN-Cache-Control "public, max-age=86400"
+  </FilesMatch>
+</IfModule>
+
+# ── COMPRESSION ──────────────────────────────────────────────
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+  AddOutputFilterByType DEFLATE application/javascript text/javascript
+  AddOutputFilterByType DEFLATE application/json application/xml
+  AddOutputFilterByType DEFLATE image/svg+xml font/woff font/woff2
+  AddOutputFilterByType DEFLATE application/font-woff application/font-woff2
+
+  # Don't compress already-compressed formats
+  SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png|webp|woff2)$" no-gzip dont-vary
+
+  # Handle Cloudflare's Accept-Encoding
+  BrowserMatch ^Mozilla/4 gzip-only-text/html
+  BrowserMatch ^Mozilla/4\.0[678] no-gzip
+  BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+</IfModule>
+
+# ── BROTLI (if available) ────────────────────────────────────
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/css application/javascript
+  AddOutputFilterByType BROTLI_COMPRESS application/json image/svg+xml font/woff2
+</IfModule>
+
+# ── ETAGs ─────────────────────────────────────────────────
+# Cloudflare strips ETags — disable to keep response headers clean
+<IfModule mod_headers.c>
+  Header unset ETag
+</IfModule>
+FileETag None
+
+# ── MIME TYPES ───────────────────────────────────────────────
+<IfModule mod_mime.c>
+  AddType application/manifest+json       .webmanifest
+  AddType application/x-web-app-manifest+json .webapp
+  AddType text/cache-manifest             .appcache
+  AddType font/woff                       .woff
+  AddType font/woff2                      .woff2
+  AddType image/webp                      .webp
+  AddType image/svg+xml                   .svg
+  AddCharset utf-8 .html .css .js .json .xml .svg
+</IfModule>
+
+# ── BLOCK BAD BOTS & SECURITY THREATS ────────────────────────
+<IfModule mod_setenvif.c>
+  SetEnvIfNoCase User-Agent "^$" bad_bot
+  SetEnvIfNoCase User-Agent "masscan|zgrab|nikto|sqlmap|nmap|dirbuster|scrapy" bad_bot
+  SetEnvIfNoCase User-Agent "MJ12bot|AhrefsBot|SemrushBot|dotbot|PetalBot" bad_bot
+</IfModule>
+
+# Block bad bots
+<RequireAll>
+  Require all granted
+  Require not env bad_bot
+</RequireAll>
+
+# ── BLOCK SENSITIVE FILES ────────────────────────────────────
+<FilesMatch "(^#.*#|\.(bak|conf|dist|fla|inc|ini|log|psd|sh|sql|sw[op])|~)$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "^(wp-config\.php|php\.ini|\.env|composer\.json|package\.json)$">
+  Require all denied
+</FilesMatch>
+
+# ── PROTECT .htaccess ITSELF ──────────────────────────────────
+<Files ".htaccess">
+  Require all denied
+</Files>
+
+# ── CUSTOM ERROR PAGES ───────────────────────────────────────
+ErrorDocument 400 /index.html
+ErrorDocument 403 /index.html
+ErrorDocument 404 /index.html
+ErrorDocument 500 /index.html
+
+# ── CLOUDFLARE IP PASSTHROUGH ────────────────────────────────
+# Ensure real visitor IPs are logged (requires mod_remoteip)
+<IfModule mod_remoteip.c>
+  RemoteIPHeader CF-Connecting-IP
+  # Cloudflare IPv4 ranges
+  RemoteIPInternalProxy 103.21.244.0/22
+  RemoteIPInternalProxy 103.22.200.0/22
+  RemoteIPInternalProxy 103.31.4.0/22
+  RemoteIPInternalProxy 104.16.0.0/13
+  RemoteIPInternalProxy 104.24.0.0/14
+  RemoteIPInternalProxy 108.162.192.0/18
+  RemoteIPInternalProxy 131.0.72.0/22
+  RemoteIPInternalProxy 141.101.64.0/18
+  RemoteIPInternalProxy 162.158.0.0/15
+  RemoteIPInternalProxy 172.64.0.0/13
+  RemoteIPInternalProxy 173.245.48.0/20
+  RemoteIPInternalProxy 188.114.96.0/20
+  RemoteIPInternalProxy 190.93.240.0/20
+  RemoteIPInternalProxy 197.234.240.0/22
+  RemoteIPInternalProxy 198.41.128.0/17
+  RemoteIPInternalProxy 2400:cb00::/32
+  RemoteIPInternalProxy 2606:4700::/32
+  RemoteIPInternalProxy 2803:f800::/32
+  RemoteIPInternalProxy 2405:b500::/32
+  RemoteIPInternalProxy 2405:8100::/32
+  RemoteIPInternalProxy 2a06:98c0::/29
+  RemoteIPInternalProxy 2c0f:f248::/32
+</IfModule>
+
+
+# ── ADMIN PANEL PROTECTION ────────────────────────────────
+# Restrict admin.html to specific IPs (add your server IP below)
+# Remove the # to enable IP restriction in production:
+# <Files "admin.html">
+#   Require ip 192.168.1.0/24
+#   Require ip YOUR.SERVER.IP
+# </Files>
+
+# Rate-limit admin login attempts (requires mod_evasive on Apache)
+# Install: apt-get install libapache2-mod-evasive
+<IfModule mod_evasive24.c>
+  DOSHashTableSize    3097
+  DOSPageCount        5
+  DOSSiteCount        50
+  DOSBlockingPeriod   10
+</IfModule>
+
+# Add basic auth to admin (uncomment + create .htpasswd file)
+# <Files "admin.html">
+#   AuthType Basic
+#   AuthName "Voxylis Admin"
+#   AuthUserFile /path/to/.htpasswd
+#   Require valid-user
+# </Files>
+
+# ── PERFORMANCE: KEEPALIVE ───────────────────────────────────
+<IfModule mod_headers.c>
+  Header set Connection "keep-alive"
+</IfModule>
+
+# ── VARY HEADER FOR ENCODING ─────────────────────────────────
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|html|xml|json|svg)$">
+    Header append Vary "Accept-Encoding"
+  </FilesMatch>
+</IfModule>
